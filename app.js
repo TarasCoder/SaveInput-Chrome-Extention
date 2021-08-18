@@ -1,35 +1,58 @@
-let myLeads = [];
+let myLeads;
 let url = "";
 const inputEl = document.getElementById("input-el");
 const inputBtn = document.getElementById("input-btn");
+const tabBtn = document.getElementById("tab-btn");
 const ulEl = document.getElementById("ul-el");
-const urlBtn = document.getElementById("url-btn");
+const deleteBtn = document.getElementById("delete-btn");
+const leadsFromLocalStorage = JSON.parse(localStorage.getItem("myLeads"));
 
-urlBtn.addEventListener("click", getUrl);
-
-inputBtn.addEventListener("click", function (ev) {
-  ev.preventDefault();
-  myLeads.push(inputEl.value);
-  renderLeads();
-});
-
-function getUrl(ev) {
-  ev.preventDefault();
-  url = window.location.href;
-  myLeads.push(url);
-  renderLeads();
-  console.log(myLeads)
+if (leadsFromLocalStorage) {
+  myLeads = leadsFromLocalStorage;
+  renderLeads(myLeads);
+} else {
+  myLeads = [];
 }
 
-function renderLeads() {
+tabBtn.addEventListener("click", saveTab);
+deleteBtn.addEventListener("dblclick", deleteAll);
+inputBtn.addEventListener("click", saveInput);
+
+function saveInput(ev) {
+  ev.preventDefault();
+  myLeads.push(inputEl.value);
+  localStorage.setItem("myLeads", JSON.stringify(myLeads));
+  inputEl.value = "";
+  // ulEl.innerHTML = ""; if using OPTION 3
+  renderLeads(myLeads);
+};
+
+function saveTab(ev) {
+  ev.preventDefault();
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    myLeads.push(tabs[0].url);
+    localStorage.setItem("myLeads", JSON.stringify(myLeads));
+    renderLeads(myLeads);
+  });
+}
+
+function deleteAll(ev) {
+  ev.preventDefault();
+  localStorage.clear();
+  myLeads = [];
+  // ulEl.innerHTML = ""; or this will also clear the DOM
+  renderLeads(myLeads);
+}
+
+function renderLeads(array) {
   // option 1*********
 
   let listItems = "";
-  for (let i = 0; i < myLeads.length; i++) {
+  for (let i = 0; i < array.length; i++) {
     listItems += `
             <li>
-                <a target="_blank" href="${myLeads[i]}">
-                    ${myLeads[i]}
+                <a target="_blank" href="${array[i]}">
+                    ${array[i]}
                 </a>
             </li>
         `;
@@ -45,9 +68,10 @@ function renderLeads() {
   // console.log(myLeads);
 
   // option 3*******************
-  // let li = document.createElement("li");
-  // for (let i = 0; i < myLeads.length; i++) {
-  //   li.textContent = myLeads[i];
+
+  // for (let i = 0; i < array.length; i++) {
+  //   let li = document.createElement("li");
+  //   li.textContent = array[i];
   //   ulEl.append(li);
   //   inputEl.value = "";
   // }
